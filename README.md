@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # VibeCheck
 
 A TypeScript CLI scanner for developers to quickly check their codebase for security issues and best practice violations.
@@ -134,3 +135,6 @@ Contributions are welcome! Feel free to:
 ## 📄 License
 
 MIT 
+=======
+# vibe-check
+>>>>>>> ddce894ec299f57188dd5d68229709f90238cdfc
