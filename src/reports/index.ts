@@ -1,1 +1,1 @@
-export { ReportGenerator } from './report-generator'; 
+export { ReportGenerator } from './report-generator';

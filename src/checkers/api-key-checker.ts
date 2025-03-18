@@ -1,137 +1,207 @@
 import * as path from 'path';
 import { CheckResult, Checker, CheckOptions } from '../types';
-import { getFiles, readFile, isTextFile, getFileContentWithLineNumbers } from '../utils/file-utils';
+import { findFiles, readFile, isTextFile } from '../utils/file-utils';
 import * as logger from '../utils/logger';
 
-// Patterns that might indicate API keys
+// API key patterns for various services
 const API_KEY_PATTERNS = [
-  // Generic API keys
-  /['"]?(?:api[_-]?key|apikey|api[_-]?secret|apisecret)['"]?\s*[=:]\s*['"]([a-zA-Z0-9_\-]{20,})['"]/, 
-  
-  // AWS keys
-  /['"]?(?:aws[_-]?access[_-]?key[_-]?id)['"]?\s*[=:]\s*['"]([A-Z0-9]{20})['"]/, 
-  /['"]?(?:aws[_-]?secret[_-]?access[_-]?key)['"]?\s*[=:]\s*['"]([A-Za-z0-9\/+]{40})['"]/, 
-  
-  // Google API keys
-  /['"]?(?:google[_-]?api[_-]?key|google[_-]?maps[_-]?api[_-]?key)['"]?\s*[=:]\s*['"]AIza([a-zA-Z0-9_-]{35})['"]/, 
-  
-  // Firebase
-  /['"]?(?:firebase[_-]?api[_-]?key)['"]?\s*[=:]\s*['"]AIza([a-zA-Z0-9_-]{35})['"]/, 
-  
-  // Stripe
-  /['"]?(?:stripe[_-]?(?:publishable|secret)[_-]?key)['"]?\s*[=:]\s*['"](?:pk|sk)_(?:test|live)_([a-zA-Z0-9]{24})['"]/, 
-  
-  // GitHub
-  /['"]?(?:github[_-]?(?:access|api)[_-]?token)['"]?\s*[=:]\s*['"](?:ghp|gho|ghu|ghs|ghr)_[a-zA-Z0-9]{36}['"]/, 
-  
-  // Slack
-  /['"]?(?:slack[_-]?(?:api|bot)[_-]?token)['"]?\s*[=:]\s*['"]xox[baprs]-([a-zA-Z0-9]+-[a-zA-Z0-9]+)['"]/, 
-  
-  // Mailchimp
-  /['"]?(?:mailchimp[_-]?api[_-]?key)['"]?\s*[=:]\s*['"]([a-f0-9]{32}-us[0-9]{1,2})['"]/, 
-  
-  // Twitter
-  /['"]?(?:twitter[_-]?(?:api|consumer)[_-]?(?:key|secret))['"]?\s*[=:]\s*['"]([a-zA-Z0-9]{25,})['"]/, 
+  {
+    service: 'Supabase',
+    pattern: /['"](?:eyJ[a-zA-Z0-9_\-\.]+)\.eyJ[a-zA-Z0-9_\-\.]+\.(?:[a-zA-Z0-9_\-\.]+)['"]|['"](?:sb(?:p|st|o)_[a-f0-9]{40,60})['"]/g,
+    recommendation: 'Use environment variables for Supabase keys and ensure they are not exposed on the client side'
+  },
+  {
+    service: 'OpenAI',
+    pattern: /['"](?:sk-[a-zA-Z0-9]{20,})(?:T3BlbkF[a-zA-Z0-9]+)?['"]/g,
+    recommendation: 'Store OpenAI API keys in server-side environment variables'
+  },
+  {
+    service: 'Anthropic',
+    pattern: /['"](?:sk-ant-api03-[a-zA-Z0-9-]{32,})['"]/g,
+    recommendation: 'Store Anthropic API keys in server-side environment variables'
+  },
+  {
+    service: 'Google API',
+    pattern: /['"](?:AIza[a-zA-Z0-9_\-]{35})['"]/g,
+    recommendation: 'Store Google API keys in server-side environment variables'
+  },
+  {
+    service: 'GitHub',
+    pattern: /['"](?:gh[ps]_[a-zA-Z0-9]{36,40})['"]/g,
+    recommendation: 'Remove GitHub tokens and use environment variables instead'
+  },
+  {
+    service: 'AWS',
+    pattern: /['"](?:AKIA[0-9A-Z]{16})['"]/g,
+    recommendation: 'Remove AWS access keys and use environment variables or IAM roles instead'
+  },
+  {
+    service: 'Generic',
+    pattern: /(?:api|access)[-_]?key['"]?\s*[=:]\s*['"]([a-zA-Z0-9_\-.~+\/]{16,64})['"]|['"]([a-zA-Z0-9]{32,64})['"]/gi,
+    recommendation: 'Store API keys in server-side environment variables'
+  }
 ];
 
-// File patterns to check
-const FILE_PATTERNS = [
-  '**/*.js',
-  '**/*.jsx',
-  '**/*.ts',
-  '**/*.tsx',
-  '**/*.json',
-  '**/*.yaml',
-  '**/*.yml',
-  '**/*.env*',
-  '**/*.config.js',
-  '**/*.config.ts',
+// File patterns to search
+const CODE_FILE_PATTERNS = [
+  // JavaScript/TypeScript
+  '**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx',
+  // Other web files
+  '**/*.html', '**/*.vue', '**/*.svelte',
+  // Configuration files
+  '**/*.json', '**/*.yaml', '**/*.yml',
+  // Ignore node_modules, build directories, etc. - handled by file-utils
 ];
 
-// Safe files/paths (typically examples or tests)
-const SAFE_PATTERNS = [
-  '**/*.example',
-  '**/*.sample',
-  '**/test/**',
-  '**/tests/**',
+// Files to exclude even if they match patterns
+const EXCLUDED_PATHS = [
   '**/node_modules/**',
-  '**/dist/**',
+  '**/dist/**', 
   '**/build/**',
+  '**/.git/**',
+  '**/package-lock.json',
+  '**/yarn.lock',
+  '**/pnpm-lock.yaml',
+  '**/*.min.js',
 ];
 
 export const apiKeyChecker: Checker = {
   id: 'api-key-checker',
   name: 'API Key Exposure Check',
-  description: 'Checks for exposed API keys and secrets in code',
+  description: 'Checks for hardcoded API keys and secrets in source code',
   
   async check(options: CheckOptions): Promise<CheckResult[]> {
-    const { directory, verbose = false } = options;
+    const { directory, ignorePatterns = [], verbose = false } = options;
     const results: CheckResult[] = [];
     
-    logger.info(`Scanning for exposed API keys in ${directory}...`);
+    logger.info(`Scanning for hardcoded API keys in ${directory}...`);
     
     try {
-      // Find all files to check
-      const files = await getFiles(directory, FILE_PATTERNS, SAFE_PATTERNS);
-      logger.debug(`Found ${files.length} files to scan`);
+      // Find all code files to scan
+      const codeFiles = await findFiles(
+        directory, 
+        CODE_FILE_PATTERNS
+      );
       
-      // Loop through files
-      for (const file of files) {
-        try {
-          // Skip binary files
-          if (!(await isTextFile(file))) {
-            continue;
-          }
+      logger.debug(`Found ${codeFiles.length} code files to scan`);
+      
+      // No code files found
+      if (codeFiles.length === 0) {
+        logger.debug('No code files found to scan');
+        return [{
+          id: 'api-key-exposure',
+          name: 'API Key Exposure Check',
+          description: 'Check for hardcoded API keys in source code',
+          severity: 'critical',
+          passed: true,
+          details: 'No code files found to scan'
+        }];
+      }
+      
+      // Loop through code files
+      let scannedFileCount = 0;
+      
+      for (const file of codeFiles) {
+        const relativeFile = path.relative(directory, file);
+        
+        // Skip excluded paths
+        if (EXCLUDED_PATHS.some(pattern => {
+          const regex = new RegExp(pattern.replace(/\*/g, '.*'));
+          return regex.test(relativeFile);
+        })) {
+          continue;
+        }
+        
+        // Skip if in ignore patterns
+        if (ignorePatterns.some(pattern => {
+          const regex = new RegExp(pattern.replace(/\*/g, '.*'));
+          return regex.test(relativeFile);
+        })) {
+          continue;
+        }
+        
+        // Check if it's a text file (skip binary files)
+        if (!(await isTextFile(file))) {
+          continue;
+        }
+        
+        scannedFileCount++;
+        
+        if (verbose) {
+          logger.debug(`Scanning ${relativeFile} for API keys`);
+        }
+        
+        // Read file content
+        const content = await readFile(file);
+        if (!content) continue; // Skip if file couldn't be read
+        
+        const lines = content.split('\n');
+        
+        // Check each pattern against the whole file
+        for (const { service, pattern, recommendation } of API_KEY_PATTERNS) {
+          // Need to reset pattern's lastIndex before each use since we're using /g flag
+          pattern.lastIndex = 0;
           
-          const relativeFile = path.relative(directory, file);
-          
-          if (verbose) {
-            logger.debug(`Scanning ${relativeFile}`);
-          }
-          
-          // Read file content
-          const content = await readFile(file);
-          const lines = getFileContentWithLineNumbers(content);
-          
-          // Check file content for API key patterns
-          for (const line of lines) {
-            for (const pattern of API_KEY_PATTERNS) {
-              const match = line.content.match(pattern);
-              
-              if (match) {
-                // Calculate column where the key starts
-                const keyStart = line.content.indexOf(match[1]);
-                
-                results.push({
-                  id: 'api-key-exposed',
-                  name: 'API Key Exposed',
-                  description: 'Potential API key or secret found in code',
-                  severity: 'high',
-                  passed: false,
-                  file: relativeFile,
-                  line: line.line,
-                  column: keyStart,
-                  code: line.content.trim(),
-                  details: `Found a possible API key in ${relativeFile}:${line.line}`,
-                  recommendation: 'Move this key to a .env file and add it to .gitignore, or use a secret management service.'
-                });
+          // Find all matches in the file
+          for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            pattern.lastIndex = 0; // Reset pattern for each line
+            
+            let match;
+            while ((match = pattern.exec(line)) !== null) {
+              // Skip if the line appears to be a test or example
+              const lowerLine = line.toLowerCase();
+              if (
+                lowerLine.includes('example') ||
+                lowerLine.includes('placeholder') ||
+                lowerLine.includes('test') ||
+                lowerLine.includes('mock') ||
+                lowerLine.includes('fake')
+              ) {
+                continue;
               }
+              
+              const key = match[0].replace(/['"]/g, '');
+              
+              // Skip if the key appears to be a placeholder
+              if (
+                key.includes('your_api_key') ||
+                key.includes('xxx') ||
+                key.includes('YOUR_') ||
+                key.includes('API_KEY_HERE')
+              ) {
+                continue;
+              }
+              
+              results.push({
+                id: `api-key-${service.toLowerCase()}`,
+                name: `Exposed ${service} API Key`,
+                description: `Found a hardcoded ${service} API key in source code`,
+                severity: 'critical',
+                passed: false,
+                file: relativeFile,
+                line: i + 1,
+                column: match.index + 1,
+                code: line.trim(),
+                details: `Hardcoded ${service} API key found in ${relativeFile}:${i + 1}`,
+                recommendation: recommendation
+              });
             }
           }
-        } catch (err) {
-          logger.debug(`Error scanning file ${file}: ${err}`);
         }
       }
+      
+      logger.debug(`Scanned ${scannedFileCount} files for API keys`);
       
       // If no issues were found, add a passing result
       if (results.length === 0) {
         results.push({
-          id: 'api-key-exposed',
+          id: 'api-key-exposure',
           name: 'API Key Exposure Check',
-          description: 'Checks for exposed API keys and secrets in code',
-          severity: 'high',
+          description: 'Check for hardcoded API keys in source code',
+          severity: 'critical',
           passed: true,
-          details: 'No exposed API keys or secrets found'
+          details: `No hardcoded API keys found in ${scannedFileCount} scanned files`
         });
       }
       
@@ -140,10 +210,10 @@ export const apiKeyChecker: Checker = {
       logger.error(`Error during API key check: ${err}`);
       
       return [{
-        id: 'api-key-checker-error',
+        id: 'api-key-error',
         name: 'API Key Check Error',
         description: 'An error occurred during the API key check',
-        severity: 'medium',
+        severity: 'critical',
         passed: false,
         details: `Error: ${err}`
       }];

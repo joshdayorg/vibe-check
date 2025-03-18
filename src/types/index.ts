@@ -26,6 +26,17 @@ export interface CheckOptions {
   verbose?: boolean;
 }
 
+export interface NextJsCheckOptions extends CheckOptions {
+  checkPublicEnv?: boolean;
+  checkApiRoutes?: boolean;
+}
+
+export interface SupabaseCheckOptions extends CheckOptions {
+  checkRls?: boolean;
+  checkStorage?: boolean;
+  checkAuth?: boolean;
+}
+
 export interface ReportOptions {
   outputFile?: string;
   format?: 'text' | 'json' | 'markdown';

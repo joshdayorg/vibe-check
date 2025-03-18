@@ -46,12 +46,14 @@ export function success(message: string): void {
 
 export function header(message: string): void {
   if (currentLogLevel <= LogLevel.INFO) {
-    console.log(chalk.bold.cyan(`\n${message}`));
+    console.log('');
+    console.log(chalk.bold.cyan(message));
+    console.log(chalk.cyan('='.repeat(message.length)));
   }
 }
 
 export function separator(): void {
   if (currentLogLevel <= LogLevel.INFO) {
-    console.log(chalk.gray('─'.repeat(80)));
+    console.log(chalk.gray('----------------------------------------'));
   }
 } 

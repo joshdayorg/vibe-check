@@ -82,21 +82,43 @@ export class VibeCheck {
         }
       }
       
-      // Generate report
-      const reportGenerator = new ReportGenerator(allResults);
+      // Log results summary
+      const passedResults = allResults.filter(result => result.passed);
+      const failedResults = allResults.filter(result => !result.passed);
       
-      // Print report to console
-      reportGenerator.printConsoleReport(this.options.showPassed);
+      if (failedResults.length === 0) {
+        logger.success(`All ${passedResults.length} checks passed!`);
+      } else {
+        logger.warn(`Found ${failedResults.length} issues (${passedResults.length} checks passed)`);
+        
+        // Group by severity
+        const criticalIssues = failedResults.filter(r => r.severity === 'critical');
+        const highIssues = failedResults.filter(r => r.severity === 'high');
+        const mediumIssues = failedResults.filter(r => r.severity === 'medium');
+        const lowIssues = failedResults.filter(r => r.severity === 'low');
+        
+        if (criticalIssues.length > 0) {
+          logger.error(`Found ${criticalIssues.length} critical issues!`);
+        }
+        if (highIssues.length > 0) {
+          logger.warn(`Found ${highIssues.length} high severity issues!`);
+        }
+        
+        // Print console report using ReportGenerator
+        const reportGenerator = new ReportGenerator(allResults);
+        reportGenerator.printConsoleReport(this.options.showPassed);
+      }
       
-      // Generate file report if outputFile is specified
+      // Generate report file if requested
       if (this.options.outputFile) {
+        const reportGenerator = new ReportGenerator(allResults);
         const reportFile = await reportGenerator.generateReportFile({
-          outputFile: this.options.outputFile,
           format: this.options.format,
+          outputFile: this.options.outputFile,
           showPassed: this.options.showPassed
         });
         
-        logger.success(`Report saved to ${reportFile}`);
+        logger.info(`Report saved to ${reportFile}`);
       }
       
       return allResults;

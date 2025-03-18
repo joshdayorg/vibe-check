@@ -1,139 +1,119 @@
 # VibeCheck
 
-A TypeScript CLI scanner for developers to quickly check their codebase for security issues and best practice violations.
+A security scanner for modern web applications that helps developers identify common security issues, especially in Next.js, Supabase, and AI-integrated applications.
 
-## 🔍 Features
+## Features
 
-- **API Key Detection**: Find exposed API keys and secrets in your code
-- **Rate Limiting Checks**: Ensure your APIs have rate limiting protection
-- **Detailed Reports**: Generate reports in Markdown, JSON, or plain text
-- **AI-Ready Output**: Use the generated reports with AI tools like Cursor to fix issues
+VibeCheck currently checks for:
 
-## 📦 Installation
+- **Next.js Environment Variables**: Detects sensitive data exposed in `NEXT_PUBLIC_` environment variables
+- **API Key Exposure**: Finds hardcoded API keys from various services (OpenAI, Supabase, AWS, etc.)
+- **Supabase Row Level Security**: Identifies tables missing RLS or with insecure public policies
+- **API Rate Limiting**: Detects API routes without proper rate limiting
 
-### From GitHub
+## Installation
 
 ```bash
-npm install -g git+https://github.com/yourusername/vibecheck.git
+# Install globally
+npm install -g vibecheck
+
+# Or run with npx
+npx vibecheck
 ```
 
-### Local Development
+## Usage
 
 ```bash
-git clone https://github.com/yourusername/vibecheck.git
-cd vibecheck
-npm install
-npm run build
-npm link
-```
-
-## 🚀 Usage
-
-Run VibeCheck in your project directory:
-
-```bash
+# Scan the current directory
 vibecheck
+
+# Scan a specific directory
+vibecheck scan /path/to/your/project
+
+# Skip specific checkers
+vibecheck scan --skip api-key-checker rate-limit-checker
+
+# Generate a detailed report
+vibecheck scan --output vibecheck-report.md
 ```
 
 ### Options
 
-```
-Usage: vibecheck [options] [command]
+- `--verbose`: Show detailed output
+- `--output <file>`: Save the report to a file
+- `--format <format>`: Report format (markdown, json, text)
+- `--ignore <patterns...>`: Glob patterns to ignore
+- `--skip <checkers...>`: Checkers to skip
+- `--no-passed`: Hide passed checks in the report
 
-A security scanner for checking basic security practices in your codebase
+## Security Checkers
 
-Options:
-  -V, --version                 output the version number
-  -h, --help                    display help for command
+### Next.js Public Environment Variable Checker
 
-Commands:
-  scan [options] [directory]    Scan the codebase for security issues (default)
-  report [options]              Generate a report file from the last scan
-  list                          List all available checkers
-  help [command]                display help for command
-```
+The `next-public-env-checker` scans for sensitive data in environment variables with the `NEXT_PUBLIC_` prefix. These variables are included in the client-side bundle and are visible to anyone who views your website.
 
-### Scan Command Options
+#### Issues Detected:
 
-```
-Usage: vibecheck scan [options] [directory]
+- API keys exposed in public environment variables
+- Authentication secrets visible in the client-side code
+- Sensitive configuration accessible in frontend code
 
-Scan the codebase for security issues
+#### Recommendation:
 
-Arguments:
-  directory                    Directory to scan (default: ".")
+Move sensitive data to server-side environment variables (without the `NEXT_PUBLIC_` prefix) and access them via API routes or server components.
 
-Options:
-  -i, --ignore <patterns...>   Glob patterns to ignore
-  -s, --skip <checkers...>     Checkers to skip
-  -v, --verbose                Enable verbose output
-  -f, --format <format>        Output format (markdown, json, text) (default: "markdown")
-  -o, --output <file>          Output file for the report
-  --no-passed                  Do not show passed checks in the report
-  -h, --help                   display help for command
-```
+### API Key Checker
 
-## 🧩 Checkers
+The `api-key-checker` looks for hardcoded API keys and secrets in your codebase that could be committed to version control.
 
-The following security checkers are included:
+#### Issues Detected:
 
-- **API Key Checker**: Detects exposed API keys and secrets in your code
-- **Rate Limit Checker**: Checks if your API endpoints have rate limiting implemented
+- OpenAI, Anthropic, and other AI service keys
+- Supabase, Firebase, and other database service keys
+- AWS, Google Cloud, and other infrastructure credentials
 
-## 🛠 Examples
+#### Recommendation:
 
-### Basic Scan
+Store API keys in environment variables and use proper secret management.
 
-```bash
-vibecheck
-```
+### Supabase RLS Checker
 
-### Scan a Specific Directory with Verbose Output
+The `supabase-rls-checker` analyzes your SQL files to ensure Row Level Security is properly configured.
 
-```bash
-vibecheck scan ./my-project -v
-```
+#### Issues Detected:
 
-### Generate a Report File
+- Tables without RLS enabled
+- Public policies that grant unrestricted access
+- Missing access controls for sensitive data
 
-```bash
-vibecheck -o report.md
-```
+#### Recommendation:
 
-### Skip Certain Checkers
+Enable RLS for all tables and create proper access policies.
 
-```bash
-vibecheck -s api-key-checker
-```
+### API Rate Limiting Checker
 
-## 📝 Working with AI
+The `rate-limit-checker` identifies API routes missing rate limiting protection.
 
-After generating a report, you can:
+#### Issues Detected:
 
-1. Copy the report content
-2. Paste it into Cursor, GitHub Copilot, or other AI code assistant
-3. Ask for help fixing the identified issues
+- Endpoints vulnerable to abuse and DoS attacks
+- No protection against brute force attacks
+- Missing throttling for expensive operations
 
-Example prompt:
+#### Recommendation:
 
-```
-I ran VibeCheck on my project and it found these issues. Can you help me fix them?
+Implement rate limiting with libraries like rate-limiter-flexible or @upstash/ratelimit.
 
-[PASTE REPORT HERE]
-```
+## Contributing
 
-## 🤝 Contributing
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-Contributions are welcome! Feel free to:
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-- Add new checkers
-- Improve existing checkers
-- Enhance reporting capabilities
-- Fix bugs
+## License
 
-## 📄 License
-
-MIT 
-=======
-# vibe-check
->>>>>>> ddce894ec299f57188dd5d68229709f90238cdfc
+This project is licensed under the MIT License - see the LICENSE file for details.
