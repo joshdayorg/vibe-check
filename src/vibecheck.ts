@@ -1,7 +1,7 @@
 import * as path from 'path';
 import * as fs from 'fs-extra';
 import { CheckResult, VibeCheckOptions, Checker } from './types';
-import { checkers } from './checkers';
+import { allCheckers } from './checkers';
 import { ReportGenerator } from './reports';
 import * as logger from './utils/logger';
 
@@ -27,7 +27,7 @@ export class VibeCheck {
     }
     
     // Filter out skipped checkers
-    this.availableCheckers = checkers.filter(
+    this.availableCheckers = allCheckers.filter(
       checker => !this.options.skipCheckers?.includes(checker.id)
     );
   }

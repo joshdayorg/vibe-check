@@ -10,6 +10,9 @@ VibeCheck currently checks for:
 - **API Key Exposure**: Finds hardcoded API keys from various services (OpenAI, Supabase, AWS, etc.)
 - **Supabase Row Level Security**: Identifies tables missing RLS or with insecure public policies
 - **API Rate Limiting**: Detects API routes without proper rate limiting
+- **JWT Insecure Storage**: Finds JWT tokens stored insecurely in localStorage or sessionStorage
+- **CORS Misconfigurations**: Identifies insecure CORS settings that could lead to cross-origin attacks
+- **AI Cost Controls**: Detects missing controls for AI APIs that could lead to unexpected costs
 
 ## Installation
 

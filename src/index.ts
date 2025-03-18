@@ -65,10 +65,10 @@ program
     console.log('');
     
     // Import checkers
-    const { checkers } = require('./checkers');
+    const { allCheckers } = require('./checkers');
     
     // Display each checker
-    for (const checker of checkers) {
+    for (const checker of allCheckers) {
       console.log(`${checker.id}:`);
       console.log(`  ${checker.description}`);
       console.log('');
