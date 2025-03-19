@@ -7,63 +7,24 @@ import * as os from 'os';
 /**
  * Get all files in a directory matching patterns and respecting gitignore
  */
-export async function getFiles(
-  directory: string,
-  patterns: string[] = ['**/*'],
-  ignorePatterns: string[] = []
-): Promise<string[]> {
-  // Make sure directory exists
-  if (!await fs.pathExists(directory)) {
-    throw new Error(`Directory ${directory} does not exist`);
-  }
-
-  // Add default ignore patterns
-  const defaultIgnores = [
-    '**/node_modules/**',
-    '**/dist/**',
-    '**/build/**',
-    '**/.git/**',
-    '**/coverage/**',
-  ];
-  
-  const allIgnores = [...defaultIgnores, ...ignorePatterns];
-  
-  // Check if .gitignore exists
-  const gitignorePath = path.join(directory, '.gitignore');
-  let gitignoreFilter = null;
-  
-  if (await fs.pathExists(gitignorePath)) {
-    const gitignoreContent = await fs.readFile(gitignorePath, 'utf8');
-    gitignoreFilter = createGitignoreFilter(gitignoreContent);
-  }
-  
-  // Gather all files
-  let files: string[] = [];
-  
-  for (const pattern of patterns) {
-    try {
-      const matchedFiles = glob.sync(pattern, {
-        cwd: directory,
-        ignore: allIgnores,
-        absolute: true,
-        nodir: true,
-      });
-      
-      files = [...files, ...matchedFiles];
-    } catch (error) {
-      console.error(`Error globbing pattern ${pattern}: ${error}`);
+export async function getFiles(directory: string, patterns: string[]): Promise<string[]> {
+  try {
+    const options = {
+      cwd: directory,
+      ignore: ['**/node_modules/**', '**/dist/**', '**/build/**'],
+      nodir: true
+    };
+    
+    const allFiles: string[] = [];
+    for (const pattern of patterns) {
+      const files = glob.sync(pattern, options);
+      allFiles.push(...files.map(f => path.join(directory, f)));
     }
+    return allFiles;
+  } catch (error) {
+    console.error(`Error finding files: ${error}`);
+    return [];
   }
-  
-  // Filter by gitignore if available
-  if (gitignoreFilter) {
-    files = files.filter(file => {
-      const relativePath = path.relative(directory, file);
-      return !gitignoreFilter(relativePath);
-    });
-  }
-  
-  return files;
 }
 
 /**

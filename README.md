@@ -18,10 +18,20 @@ VibeCheck currently checks for:
 
 ```bash
 # Install globally
-npm install -g vibecheck
+npm install -g @sparky123/vibecheck
 
 # Or run with npx
-npx vibecheck
+npx @sparky123/vibecheck
+```
+
+## Quick Start
+
+```bash
+# Go to your project directory
+cd your-project
+
+# Run the security scan
+vibecheck scan .
 ```
 
 ## Usage

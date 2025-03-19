@@ -1,6 +1,6 @@
 {
-  "name": "vibecheck",
-  "version": "0.1.0",
+  "name": "@sparky123/vibecheck",
+  "version": "0.1.1",
   "description": "A TypeScript CLI tool to scan codebases for security issues and best practice violations",
   "main": "dist/index.js",
   "bin": {
@@ -12,7 +12,8 @@
     "dev": "ts-node src/index.ts",
     "test": "jest",
     "test:watch": "jest --watch",
-    "prepare": "npm run build"
+    "prepare": "npm run build",
+    "prepublishOnly": "npm test && npm run build"
   },
   "keywords": [
     "cli",
@@ -56,5 +57,8 @@
   "bugs": {
     "url": "https://github.com/joshdayorg/vibe-check/issues"
   },
-  "homepage": "https://github.com/joshdayorg/vibe-check#readme"
+  "homepage": "https://github.com/joshdayorg/vibe-check#readme",
+  "publishConfig": {
+    "access": "public"
+  }
 }
