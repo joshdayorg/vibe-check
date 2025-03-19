@@ -42,7 +42,7 @@ describe('API Key Checker', () => {
   test('should detect hardcoded Supabase key', async () => {
     // Create a test JS file with hardcoded Supabase key - match the exact pattern
     const filePath = path.join(tempDir, 'config.js');
-    await fs.writeFile(filePath, 'const supabaseKey = "sbp_123456789012345678901234567890123456789012";');
+    await fs.writeFile(filePath, 'const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNvbWV0aGluZyIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNjE2MTY5MjAwLCJleHAiOjE5MzE3NDUyMDB9.somethingsomething";');
     
     const results = await apiKeyChecker.check({ directory: tempDir });
     
