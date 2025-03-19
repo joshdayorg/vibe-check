@@ -1,8 +1,8 @@
 import * as path from 'path';
 import * as fs from 'fs-extra';
-import { CheckResult, VibeCheckOptions, Checker } from './types';
-import { allCheckers } from './checkers';
-import { ReportGenerator } from './reports';
+import { CheckResult, VibeCheckOptions, Checker, ReportOptions, CheckOptions, Severity } from './types';
+import { checkers } from './checkers';
+import { ReportGenerator } from './reports/report-generator';
 import * as logger from './utils/logger';
 
 export class VibeCheck {
@@ -27,8 +27,8 @@ export class VibeCheck {
     }
     
     // Filter out skipped checkers
-    this.availableCheckers = allCheckers.filter(
-      checker => !this.options.skipCheckers?.includes(checker.id)
+    this.availableCheckers = checkers.filter(
+      (checker: Checker) => !this.options.skipCheckers?.includes(checker.id)
     );
   }
   
@@ -75,7 +75,7 @@ export class VibeCheck {
             id: `${checker.id}-error`,
             name: `${checker.name} Error`,
             description: `An error occurred during the ${checker.name}`,
-            severity: 'medium',
+            severity: Severity.Medium,
             passed: false,
             details: `Error: ${err}`
           });
@@ -126,5 +126,47 @@ export class VibeCheck {
       logger.error(`Error running VibeCheck: ${err}`);
       throw err;
     }
+  }
+
+  private async handleError(err: Error): Promise<CheckResult[]> {
+    logger.error(`Error during scan: ${err}`);
+    
+    return [{
+      id: 'scan-error',
+      name: 'Scan Error',
+      description: 'An error occurred during the security scan',
+      severity: Severity.Medium,
+      passed: false,
+      details: `Error: ${err.message}`
+    }];
+  }
+
+  private async runCheckers(): Promise<CheckResult[]> {
+    const results: CheckResult[] = [];
+    
+    // Filter out skipped checkers
+    const enabledCheckers = checkers.filter(
+      (checker: Checker) => !this.options.skipCheckers?.includes(checker.id)
+    );
+    
+    // Run each checker
+    for (const checker of enabledCheckers) {
+      try {
+        const checkerResults = await checker.check(this.options);
+        results.push(...checkerResults);
+      } catch (err) {
+        logger.error(`Error in checker ${checker.id}: ${err}`);
+        results.push({
+          id: `${checker.id}-error`,
+          name: `${checker.name} Error`,
+          description: `An error occurred during the ${checker.name} check`,
+          severity: Severity.Medium,
+          passed: false,
+          details: `Error: ${err}`
+        });
+      }
+    }
+    
+    return results;
   }
 } 

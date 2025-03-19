@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { CheckResult, Checker, CheckOptions } from '../types';
+import { CheckResult, Checker, CheckOptions, Severity } from '../types';
 import { findFiles, readFile } from '../utils/file-utils';
 import * as logger from '../utils/logger';
 
@@ -61,7 +61,7 @@ export const rateLimitChecker: Checker = {
           id: 'rate-limit',
           name: 'API Rate Limiting Check',
           description: 'Check for missing rate limiting in API routes',
-          severity: 'medium',
+          severity: Severity.Medium,
           passed: true,
           details: 'No API files found to scan'
         }];
@@ -167,7 +167,7 @@ export const rateLimitChecker: Checker = {
               id: 'rate-limit-missing',
               name: 'Missing API Rate Limiting',
               description: 'API route does not implement rate limiting',
-              severity: isProbablyMutation ? 'high' : 'medium',
+              severity: isProbablyMutation ? Severity.High : Severity.Medium,
               passed: false,
               file: relativeFile,
               details: `API route in ${relativeFile} does not appear to implement rate limiting, which could lead to abuse or DoS`,
@@ -190,7 +190,7 @@ export const rateLimitChecker: Checker = {
           id: 'rate-limit',
           name: 'API Rate Limiting Check',
           description: 'Check for missing rate limiting in API routes',
-          severity: 'medium',
+          severity: Severity.Medium,
           passed: true,
           details: hasGlobalRateLimit 
             ? 'Global rate limiting is implemented' 
@@ -203,7 +203,7 @@ export const rateLimitChecker: Checker = {
             id: 'rate-limit-summary',
             name: 'Rate Limiting Summary',
             description: 'Summary of API routes missing rate limiting',
-            severity: 'medium',
+            severity: Severity.Medium,
             passed: false,
             details: `${routesWithoutRateLimit.length} API routes are missing rate limiting protection`,
             recommendation: hasRateLimitingPackage
@@ -221,7 +221,7 @@ export const rateLimitChecker: Checker = {
         id: 'rate-limit-error',
         name: 'Rate Limiting Check Error',
         description: 'An error occurred during the rate limiting check',
-        severity: 'medium',
+        severity: Severity.Medium,
         passed: false,
         details: `Error: ${err}`
       }];

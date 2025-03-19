@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { CheckResult, Checker, CheckOptions } from '../types';
+import { CheckResult, Checker, CheckOptions, Severity } from '../types';
 import { findFiles, readFile } from '../utils/file-utils';
 import * as logger from '../utils/logger';
 
@@ -55,7 +55,7 @@ export const jwtStorageChecker: Checker = {
           id: 'jwt-storage',
           name: 'JWT in Browser Storage Check',
           description: 'Check for JWT tokens stored in localStorage or sessionStorage',
-          severity: 'high',
+          severity: Severity.High,
           passed: true,
           details: 'No frontend code files found to scan'
         }];
@@ -109,11 +109,14 @@ export const jwtStorageChecker: Checker = {
               id: 'jwt-local-storage',
               name: 'JWT Token in Browser Storage',
               description: 'JWT tokens stored in localStorage or sessionStorage can be vulnerable to XSS attacks',
-              severity: 'high',
+              severity: Severity.High,
               passed: false,
               file: relativeFile,
-              line: lineNumber,
-              code: lineContent,
+              location: {
+                file: relativeFile,
+                line: lineNumber,
+                code: lineContent
+              },
               details: `Found potential JWT token stored in browser storage in ${relativeFile}${lineNumber ? `:${lineNumber}` : ''}`,
               recommendation: 'Store JWT tokens in HttpOnly cookies instead of localStorage or sessionStorage to protect against XSS attacks'
             });
@@ -130,7 +133,7 @@ export const jwtStorageChecker: Checker = {
           id: 'jwt-storage',
           name: 'JWT in Browser Storage Check',
           description: 'Check for JWT tokens stored in localStorage or sessionStorage',
-          severity: 'high',
+          severity: Severity.High,
           passed: true,
           details: `No JWT tokens found stored in localStorage or sessionStorage in ${fileCount} files`
         });
@@ -144,7 +147,7 @@ export const jwtStorageChecker: Checker = {
         id: 'jwt-storage-error',
         name: 'JWT Storage Check Error',
         description: 'An error occurred during the JWT storage check',
-        severity: 'medium',
+        severity: Severity.Medium,
         passed: false,
         details: `Error: ${err}`
       }];

@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { CheckResult, Checker, CheckOptions } from '../types';
+import { CheckResult, Checker, CheckOptions, Severity } from '../types';
 import { findFiles, readFile } from '../utils/file-utils';
 import * as logger from '../utils/logger';
 
@@ -61,7 +61,7 @@ export const corsChecker: Checker = {
           id: 'cors-config',
           name: 'CORS Configuration Check',
           description: 'Check for misconfigurations in CORS settings',
-          severity: 'high',
+          severity: Severity.High,
           passed: true,
           details: 'No server-side files found to scan'
         }];
@@ -117,11 +117,14 @@ export const corsChecker: Checker = {
             id: 'cors-wildcard-origin',
             name: 'CORS Wildcard Origin',
             description: 'CORS configured with wildcard origin (*) allows any website to make requests',
-            severity: 'medium',
+            severity: Severity.Medium,
             passed: false,
             file: relativeFile,
-            line: lineNumber,
-            code: lineContent,
+            location: {
+              file: relativeFile,
+              line: lineNumber,
+              code: lineContent
+            },
             details: `CORS wildcard origin (*) found in ${relativeFile}${lineNumber ? `:${lineNumber}` : ''}`,
             recommendation: 'Specify exact origins instead of using a wildcard (*). For example: origin: "https://example.com"'
           });
@@ -148,11 +151,14 @@ export const corsChecker: Checker = {
             id: 'cors-credentials-dynamic-origin',
             name: 'CORS with Credentials and Dynamic Origin',
             description: 'Using credentials with a dynamic origin can lead to security vulnerabilities',
-            severity: 'critical',
+            severity: Severity.Critical,
             passed: false,
             file: relativeFile,
-            line: lineNumber,
-            code: lineContent,
+            location: {
+              file: relativeFile,
+              line: lineNumber,
+              code: lineContent
+            },
             details: `CORS with credentials and dynamic origin found in ${relativeFile}${lineNumber ? `:${lineNumber}` : ''}`,
             recommendation: 'Only use credentials with a specific static origin, never with a dynamic origin based on request headers'
           });
@@ -177,11 +183,14 @@ export const corsChecker: Checker = {
             id: 'cors-express-wildcard',
             name: 'Express CORS Wildcard',
             description: 'Express CORS middleware with wildcard origin allows requests from any origin',
-            severity: 'medium',
+            severity: Severity.Medium,
             passed: false,
             file: relativeFile,
-            line: lineNumber,
-            code: lineContent,
+            location: {
+              file: relativeFile,
+              line: lineNumber,
+              code: lineContent
+            },
             details: `Express CORS middleware with wildcard origin found in ${relativeFile}${lineNumber ? `:${lineNumber}` : ''}`,
             recommendation: 'Specify an array of allowed origins instead of using a wildcard, e.g., origin: ["https://example.com"]'
           });
@@ -194,7 +203,7 @@ export const corsChecker: Checker = {
           id: 'cors-config',
           name: 'CORS Configuration Check',
           description: 'Check for misconfigurations in CORS settings',
-          severity: 'high',
+          severity: Severity.High,
           passed: true,
           details: `No CORS misconfigurations found in ${fileCount} server-side files`
         });
@@ -208,7 +217,7 @@ export const corsChecker: Checker = {
         id: 'cors-error',
         name: 'CORS Check Error',
         description: 'An error occurred during the CORS configuration check',
-        severity: 'medium',
+        severity: Severity.Medium,
         passed: false,
         details: `Error: ${err}`
       }];

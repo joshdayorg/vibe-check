@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { CheckResult, Checker, CheckOptions } from '../types';
+import { CheckResult, Checker, CheckOptions, Severity } from '../types';
 import { findFiles, readFile, isTextFile } from '../utils/file-utils';
 import * as logger from '../utils/logger';
 
@@ -92,7 +92,7 @@ export const apiKeyChecker: Checker = {
           id: 'api-key-exposure',
           name: 'API Key Exposure Check',
           description: 'Check for hardcoded API keys in source code',
-          severity: 'critical',
+          severity: Severity.Critical,
           passed: true,
           details: 'No code files found to scan'
         }];
@@ -177,12 +177,14 @@ export const apiKeyChecker: Checker = {
                 id: `api-key-${service.toLowerCase()}`,
                 name: `Exposed ${service} API Key`,
                 description: `Found a hardcoded ${service} API key in source code`,
-                severity: 'critical',
+                severity: Severity.Critical,
                 passed: false,
                 file: relativeFile,
-                line: i + 1,
-                column: match.index + 1,
-                code: line.trim(),
+                location: {
+                  file: relativeFile,
+                  line: i + 1,
+                  code: line.trim()
+                },
                 details: `Hardcoded ${service} API key found in ${relativeFile}:${i + 1}`,
                 recommendation: recommendation
               });
@@ -199,7 +201,7 @@ export const apiKeyChecker: Checker = {
           id: 'api-key-exposure',
           name: 'API Key Exposure Check',
           description: 'Check for hardcoded API keys in source code',
-          severity: 'critical',
+          severity: Severity.Critical,
           passed: true,
           details: `No hardcoded API keys found in ${scannedFileCount} scanned files`
         });
@@ -213,7 +215,7 @@ export const apiKeyChecker: Checker = {
         id: 'api-key-error',
         name: 'API Key Check Error',
         description: 'An error occurred during the API key check',
-        severity: 'critical',
+        severity: Severity.Critical,
         passed: false,
         details: `Error: ${err}`
       }];

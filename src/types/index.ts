@@ -1,12 +1,23 @@
+export enum Severity {
+  Critical = 'critical',
+  High = 'high',
+  Medium = 'medium',
+  Low = 'low'
+}
+
 export interface CheckResult {
   id: string;
   name: string;
   description: string;
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  severity: Severity;
   passed: boolean;
-  details?: string;
+  details: string;
+  location?: {
+    file: string;
+    line: number;
+    code: string;
+  };
   file?: string;
-  line?: number;
   column?: number;
   code?: string;
   recommendation?: string;

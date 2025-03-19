@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { CheckResult, Checker, CheckOptions } from '../../types';
+import { CheckResult, Checker, CheckOptions, Severity } from '../../types';
 import { findEnvFiles, readFile } from '../../utils/file-utils';
 import * as logger from '../../utils/logger';
 
@@ -33,7 +33,7 @@ export const nextPublicEnvChecker: Checker = {
           id: 'next-public-env',
           name: 'Next.js Public Environment Variables',
           description: 'Check for sensitive data in NEXT_PUBLIC_ variables',
-          severity: 'medium',
+          severity: Severity.Medium,
           passed: true,
           details: 'No Next.js environment files found to scan'
         }];
@@ -64,11 +64,14 @@ export const nextPublicEnvChecker: Checker = {
                 id: 'next-public-env-exposed',
                 name: 'Exposed Sensitive Data in NEXT_PUBLIC_ Variable',
                 description: 'Found sensitive data exposed in a NEXT_PUBLIC_ environment variable',
-                severity: 'critical',
+                severity: Severity.Critical,
                 passed: false,
                 file: relativeFile,
-                line: i + 1,
-                code: line,
+                location: {
+                  file: relativeFile,
+                  line: i + 1,
+                  code: line
+                },
                 details: `Public environment variable contains sensitive data in ${path.basename(file)}:${i + 1}`,
                 recommendation: 'Remove the NEXT_PUBLIC_ prefix and use server-side access only, or use a different approach like API routes to access this data'
               });
@@ -83,7 +86,7 @@ export const nextPublicEnvChecker: Checker = {
           id: 'next-public-env',
           name: 'Next.js Public Environment Variables',
           description: 'Check for sensitive data in NEXT_PUBLIC_ variables',
-          severity: 'medium',
+          severity: Severity.Medium,
           passed: true,
           details: 'No sensitive data found in NEXT_PUBLIC_ environment variables'
         });
@@ -97,7 +100,7 @@ export const nextPublicEnvChecker: Checker = {
         id: 'next-public-env-error',
         name: 'Next.js Public Environment Check Error',
         description: 'An error occurred during the Next.js public environment check',
-        severity: 'medium',
+        severity: Severity.Medium,
         passed: false,
         details: `Error: ${err}`
       }];

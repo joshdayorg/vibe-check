@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { CheckResult, Checker, CheckOptions } from '../types';
+import { CheckResult, Checker, CheckOptions, Severity } from '../types';
 import { findFiles, readFile } from '../utils/file-utils';
 import * as logger from '../utils/logger';
 
@@ -82,7 +82,7 @@ export const insecureCookiesChecker: Checker = {
           id: 'insecure-cookies',
           name: 'Insecure Cookies Check',
           description: 'Check for insecure cookie configurations',
-          severity: 'high',
+          severity: Severity.High,
           passed: true,
           details: 'No relevant code files found to scan'
         }];
@@ -164,11 +164,14 @@ export const insecureCookiesChecker: Checker = {
               id: 'missing-secure-flag',
               name: 'Missing Secure Flag in Cookies',
               description: 'Cookies are set without the Secure flag, allowing transmission over unencrypted connections',
-              severity: 'high',
+              severity: Severity.High,
               passed: false,
               file: relativeFile,
-              line: cookieLines.length > 0 ? cookieLines[0].line : undefined,
-              code: cookieLines.length > 0 ? cookieLines[0].content : undefined,
+              location: {
+                file: relativeFile,
+                line: cookieLines.length > 0 ? cookieLines[0].line : 0,
+                code: cookieLines.length > 0 ? cookieLines[0].content : ''
+              },
               details: `Cookies set without Secure flag in ${relativeFile}`,
               recommendation: 'Add the Secure flag to ensure cookies are only sent over HTTPS connections'
             });
@@ -180,11 +183,14 @@ export const insecureCookiesChecker: Checker = {
               id: 'missing-httponly-flag',
               name: 'Missing HttpOnly Flag in Cookies',
               description: 'Server-side cookies are set without the HttpOnly flag, exposing them to client-side JavaScript',
-              severity: 'high',
+              severity: Severity.High,
               passed: false,
               file: relativeFile,
-              line: cookieLines.length > 0 ? cookieLines[0].line : undefined,
-              code: cookieLines.length > 0 ? cookieLines[0].content : undefined,
+              location: {
+                file: relativeFile,
+                line: cookieLines.length > 0 ? cookieLines[0].line : 0,
+                code: cookieLines.length > 0 ? cookieLines[0].content : ''
+              },
               details: `Server-side cookies set without HttpOnly flag in ${relativeFile}`,
               recommendation: 'Add the HttpOnly flag to prevent client-side JavaScript from accessing cookies'
             });
@@ -196,11 +202,14 @@ export const insecureCookiesChecker: Checker = {
               id: 'missing-samesite-attribute',
               name: 'Missing SameSite Attribute in Cookies',
               description: 'Cookies are set without the SameSite attribute, exposing them to CSRF attacks',
-              severity: 'medium',
+              severity: Severity.Medium,
               passed: false,
               file: relativeFile,
-              line: cookieLines.length > 0 ? cookieLines[0].line : undefined,
-              code: cookieLines.length > 0 ? cookieLines[0].content : undefined,
+              location: {
+                file: relativeFile,
+                line: cookieLines.length > 0 ? cookieLines[0].line : 0,
+                code: cookieLines.length > 0 ? cookieLines[0].content : ''
+              },
               details: `Cookies set without SameSite attribute in ${relativeFile}`,
               recommendation: 'Add the SameSite=Strict or SameSite=Lax attribute to mitigate CSRF attacks'
             });
@@ -214,7 +223,7 @@ export const insecureCookiesChecker: Checker = {
           id: 'insecure-cookies',
           name: 'Insecure Cookies Check',
           description: 'Check for insecure cookie configurations',
-          severity: 'high',
+          severity: Severity.High,
           passed: true,
           details: `No cookie usage found in ${fileCount} scanned files`
         });
@@ -224,7 +233,7 @@ export const insecureCookiesChecker: Checker = {
           id: 'insecure-cookies',
           name: 'Insecure Cookies Check',
           description: 'Check for insecure cookie configurations',
-          severity: 'high',
+          severity: Severity.High,
           passed: true,
           details: `Found ${cookieUsageCount} cookie usages with proper security configurations`
         });
@@ -238,7 +247,7 @@ export const insecureCookiesChecker: Checker = {
         id: 'insecure-cookies-error',
         name: 'Insecure Cookies Check Error',
         description: 'An error occurred during the insecure cookies check',
-        severity: 'high',
+        severity: Severity.High,
         passed: false,
         details: `Error: ${err}`
       }];

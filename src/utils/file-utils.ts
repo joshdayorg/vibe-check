@@ -139,4 +139,13 @@ export async function isTextFile(file: string): Promise<boolean> {
   } catch (error) {
     return false;
   }
+}
+
+export async function readFileContent(filePath: string): Promise<string> {
+  try {
+    return await fs.readFile(filePath, 'utf8');
+  } catch (error) {
+    console.error(`Error reading file ${filePath}: ${error}`);
+    return '';
+  }
 } 

@@ -1,21 +1,20 @@
 import * as path from 'path';
-import { CheckResult, Checker, CheckOptions } from '../../types';
+import { CheckResult, Checker, CheckOptions, Severity } from '../../types';
 import { findSqlFiles, readFile } from '../../utils/file-utils';
 import * as logger from '../../utils/logger';
 
-export const supabaseRlsChecker: Checker = {
-  id: 'supabase-rls-checker',
-  name: 'Supabase RLS Policy Check',
+export const rlsChecker: Checker = {
+  id: 'rls',
+  name: 'Supabase RLS',
   description: 'Checks for missing or insecure Row Level Security policies',
-  
-  async check(options: CheckOptions): Promise<CheckResult[]> {
+  check: async (options: CheckOptions): Promise<CheckResult[]> => {
     const { directory, verbose = false } = options;
     const results: CheckResult[] = [];
     
-    logger.info(`Scanning for Supabase RLS issues in ${directory}...`);
+    logger.info(`Scanning for RLS issues in ${directory}...`);
     
     try {
-      // Find all SQL files
+      // Find SQL files
       const sqlFiles = await findSqlFiles(directory);
       logger.debug(`Found ${sqlFiles.length} SQL files to scan`);
       
@@ -25,14 +24,14 @@ export const supabaseRlsChecker: Checker = {
           id: 'supabase-rls',
           name: 'Supabase RLS Policy Check',
           description: 'Check for missing or insecure Row Level Security policies',
-          severity: 'high',
+          severity: Severity.High,
           passed: true,
           details: 'No SQL files found to scan'
         }];
       }
       
       // Track tables and their RLS status
-      const tables: Record<string, { hasRls: boolean, file: string, line?: number }> = {};
+      const tables: Record<string, { hasRls: boolean, file: string, line?: number, content?: string }> = {};
       const publicPolicies: Array<{ table: string, file: string, line: number, policy: string }> = [];
       
       // Loop through SQL files
@@ -57,7 +56,7 @@ export const supabaseRlsChecker: Checker = {
           const tableMatch = line.match(/create\s+table\s+(?:if\s+not\s+exists\s+)?([a-z0-9_"]+)/i);
           if (tableMatch) {
             const tableName = tableMatch[1].replace(/"/g, '').trim();
-            tables[tableName] = { hasRls: false, file: relativeFile, line: i + 1 };
+            tables[tableName] = { hasRls: false, file: relativeFile, line: i + 1, content };
           }
           
           // Check for RLS enablement
@@ -67,7 +66,7 @@ export const supabaseRlsChecker: Checker = {
             if (tables[tableName]) {
               tables[tableName].hasRls = true;
             } else {
-              tables[tableName] = { hasRls: true, file: relativeFile, line: i + 1 };
+              tables[tableName] = { hasRls: true, file: relativeFile, line: i + 1, content };
             }
           }
           
@@ -100,10 +99,14 @@ export const supabaseRlsChecker: Checker = {
             id: 'supabase-rls-disabled',
             name: 'Missing Row Level Security',
             description: `Table "${tableName}" does not have Row Level Security enabled`,
-            severity: 'high',
+            severity: Severity.High,
             passed: false,
             file: info.file,
-            line: info.line,
+            location: {
+              file: info.file,
+              line: info.line || 0,
+              code: info.content || ''
+            },
             details: `Table "${tableName}" in ${info.file} does not have RLS enabled, allowing unrestricted access`,
             recommendation: `Enable RLS with: ALTER TABLE "${tableName}" ENABLE ROW LEVEL SECURITY;`
           });
@@ -115,12 +118,15 @@ export const supabaseRlsChecker: Checker = {
         results.push({
           id: 'supabase-public-policy',
           name: 'Public Access Policy',
-          description: `Table "${policy.table}" has a public access policy`,
-          severity: 'high',
+          description: `Table "${policy.table}" has a policy that grants public access`,
+          severity: Severity.High,
           passed: false,
           file: policy.file,
-          line: policy.line,
-          code: policy.policy,
+          location: {
+            file: policy.file,
+            line: policy.line || 0,
+            code: policy.policy || ''
+          },
           details: `Table "${policy.table}" has a policy that grants public access in ${policy.file}:${policy.line}`,
           recommendation: 'Replace "using (true)" with a proper access condition like "using (auth.uid() = user_id)"'
         });
@@ -132,7 +138,7 @@ export const supabaseRlsChecker: Checker = {
           id: 'supabase-rls',
           name: 'Supabase RLS Policy Check',
           description: 'Check for missing or insecure Row Level Security policies',
-          severity: 'high',
+          severity: Severity.High,
           passed: true,
           details: 'All tables have RLS enabled with proper access policies'
         });
@@ -146,7 +152,7 @@ export const supabaseRlsChecker: Checker = {
         id: 'supabase-rls-error',
         name: 'Supabase RLS Check Error',
         description: 'An error occurred during the Supabase RLS check',
-        severity: 'high',
+        severity: Severity.High,
         passed: false,
         details: `Error: ${err}`
       }];

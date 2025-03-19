@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { CheckResult, Checker, CheckOptions } from '../types';
+import { CheckResult, Checker, CheckOptions, Severity } from '../types';
 import { findFiles, readFile } from '../utils/file-utils';
 import * as logger from '../utils/logger';
 
@@ -87,7 +87,7 @@ export const aiCostControlsChecker: Checker = {
           id: 'ai-cost-controls',
           name: 'AI API Cost Controls Check',
           description: 'Check for missing cost controls when using AI APIs',
-          severity: 'medium',
+          severity: Severity.Medium,
           passed: true,
           details: 'No relevant code files found to scan'
         }];
@@ -98,9 +98,12 @@ export const aiCostControlsChecker: Checker = {
       let openaiUsage = 0;
       let anthropicUsage = 0;
       let cohereUsage = 0;
+      let lineNumber = 0;
+      let lineContent = '';
+      let relativeFile = '';
       
       for (const file of codeFiles) {
-        const relativeFile = path.relative(directory, file);
+        relativeFile = path.relative(directory, file);
         
         // Skip files matching ignore patterns
         if (IGNORE_PATTERNS.some(pattern => relativeFile.includes(pattern))) {
@@ -144,11 +147,13 @@ export const aiCostControlsChecker: Checker = {
               id: 'openai-missing-parameter-controls',
               name: 'OpenAI API Missing Parameter Controls',
               description: 'OpenAI API usage detected without parameter controls to limit tokens or control generation',
-              severity: 'medium',
+              location: {
+                file: relativeFile,
+                line: lineNumber,
+                code: lineContent
+              },
+              severity: Severity.Medium,
               passed: false,
-              file: relativeFile,
-              line: lineNumber,
-              code: lineContent,
               details: `OpenAI API usage without parameter controls in ${relativeFile}${lineNumber ? `:${lineNumber}` : ''}`,
               recommendation: 'Add parameter controls like maxTokens, temperature, and frequency_penalty to limit costs'
             });
@@ -159,9 +164,13 @@ export const aiCostControlsChecker: Checker = {
               id: 'openai-missing-budget-controls',
               name: 'OpenAI API Missing Budget Controls',
               description: 'OpenAI API usage detected without budget tracking mechanisms',
-              severity: 'high',
+              location: {
+                file: relativeFile,
+                line: lineNumber,
+                code: lineContent
+              },
+              severity: Severity.High,
               passed: false,
-              file: relativeFile,
               details: `OpenAI API usage without budget controls in ${relativeFile}`,
               recommendation: 'Implement token counting and budget tracking mechanisms to prevent unexpected costs'
             });
@@ -172,9 +181,13 @@ export const aiCostControlsChecker: Checker = {
               id: 'openai-missing-error-handling',
               name: 'OpenAI API Missing Error Handling',
               description: 'OpenAI API usage detected without proper error handling',
-              severity: 'medium',
+              location: {
+                file: relativeFile,
+                line: lineNumber,
+                code: lineContent
+              },
+              severity: Severity.Medium,
               passed: false,
-              file: relativeFile,
               details: `OpenAI API usage without error handling in ${relativeFile}`,
               recommendation: 'Add try/catch blocks with proper error handling to manage API failures and prevent unnecessary retries'
             });
@@ -195,9 +208,13 @@ export const aiCostControlsChecker: Checker = {
               id: 'anthropic-missing-parameter-controls',
               name: 'Anthropic API Missing Parameter Controls',
               description: 'Anthropic API usage detected without parameter controls to limit tokens',
-              severity: 'medium',
+              location: {
+                file: relativeFile,
+                line: lineNumber,
+                code: lineContent
+              },
+              severity: Severity.Medium,
               passed: false,
-              file: relativeFile,
               details: `Anthropic API usage without parameter controls in ${relativeFile}`,
               recommendation: 'Add parameter controls like max_tokens_to_sample, temperature, and top_p to limit costs'
             });
@@ -208,9 +225,13 @@ export const aiCostControlsChecker: Checker = {
               id: 'anthropic-missing-budget-controls',
               name: 'Anthropic API Missing Budget Controls',
               description: 'Anthropic API usage detected without budget tracking mechanisms',
-              severity: 'high',
+              location: {
+                file: relativeFile,
+                line: lineNumber,
+                code: lineContent
+              },
+              severity: Severity.High,
               passed: false,
-              file: relativeFile,
               details: `Anthropic API usage without budget controls in ${relativeFile}`,
               recommendation: 'Implement token counting and budget tracking mechanisms to prevent unexpected costs'
             });
@@ -221,9 +242,13 @@ export const aiCostControlsChecker: Checker = {
               id: 'anthropic-missing-error-handling',
               name: 'Anthropic API Missing Error Handling',
               description: 'Anthropic API usage detected without proper error handling',
-              severity: 'medium',
+              location: {
+                file: relativeFile,
+                line: lineNumber,
+                code: lineContent
+              },
+              severity: Severity.Medium,
               passed: false,
-              file: relativeFile,
               details: `Anthropic API usage without error handling in ${relativeFile}`,
               recommendation: 'Add try/catch blocks with proper error handling to manage API failures'
             });
@@ -243,9 +268,13 @@ export const aiCostControlsChecker: Checker = {
               id: 'cohere-missing-parameter-controls',
               name: 'Cohere API Missing Parameter Controls',
               description: 'Cohere API usage detected without parameter controls to limit tokens',
-              severity: 'medium',
+              location: {
+                file: relativeFile,
+                line: lineNumber,
+                code: lineContent
+              },
+              severity: Severity.Medium,
               passed: false,
-              file: relativeFile,
               details: `Cohere API usage without parameter controls in ${relativeFile}`,
               recommendation: 'Add parameter controls like max_tokens, temperature to limit costs'
             });
@@ -256,9 +285,13 @@ export const aiCostControlsChecker: Checker = {
               id: 'cohere-missing-budget-controls',
               name: 'Cohere API Missing Budget Controls',
               description: 'Cohere API usage detected without budget tracking mechanisms',
-              severity: 'high',
+              location: {
+                file: relativeFile,
+                line: lineNumber,
+                code: lineContent
+              },
+              severity: Severity.High,
               passed: false,
-              file: relativeFile,
               details: `Cohere API usage without budget controls in ${relativeFile}`,
               recommendation: 'Implement token counting and budget tracking mechanisms to prevent unexpected costs'
             });
@@ -272,7 +305,12 @@ export const aiCostControlsChecker: Checker = {
           id: 'ai-cost-controls',
           name: 'AI API Cost Controls Check',
           description: 'Check for missing cost controls when using AI APIs',
-          severity: 'medium',
+          location: {
+            file: relativeFile,
+            line: lineNumber,
+            code: lineContent
+          },
+          severity: Severity.Medium,
           passed: true,
           details: `No AI API usage found in ${fileCount} scanned files`
         });
@@ -282,7 +320,12 @@ export const aiCostControlsChecker: Checker = {
           id: 'ai-cost-controls',
           name: 'AI API Cost Controls Check',
           description: 'Check for missing cost controls when using AI APIs',
-          severity: 'medium',
+          location: {
+            file: relativeFile,
+            line: lineNumber,
+            code: lineContent
+          },
+          severity: Severity.Medium,
           passed: true,
           details: `Found ${openaiUsage + anthropicUsage + cohereUsage} AI API usages with proper cost controls`
         });
@@ -296,7 +339,12 @@ export const aiCostControlsChecker: Checker = {
         id: 'ai-cost-controls-error',
         name: 'AI Cost Controls Check Error',
         description: 'An error occurred during the AI cost controls check',
-        severity: 'medium',
+        location: {
+          file: '',
+          line: 0,
+          code: ''
+        },
+        severity: Severity.Medium,
         passed: false,
         details: `Error: ${err}`
       }];

@@ -78,7 +78,7 @@ export class ReportGenerator {
    */
   private printIssueGroup(issues: CheckResult[]): void {
     for (const issue of issues) {
-      const fileDetail = issue.file ? ` (${issue.file}${issue.line ? `:${issue.line}` : ''})` : '';
+      const fileDetail = issue.file ? ` (${issue.file}${issue.location?.line ? `:${issue.location.line}` : ''})` : '';
       console.log(chalk.red(`✗ ${issue.name}${fileDetail}`));
       
       if (issue.details) {
@@ -221,7 +221,7 @@ export class ReportGenerator {
    */
   private addIssueGroupToTextReport(issues: CheckResult[], lines: string[]): void {
     for (const issue of issues) {
-      const fileDetail = issue.file ? ` (${issue.file}${issue.line ? `:${issue.line}` : ''})` : '';
+      const fileDetail = issue.file ? ` (${issue.file}${issue.location?.line ? `:${issue.location.line}` : ''})` : '';
       lines.push(`✗ ${issue.name}${fileDetail}`);
       
       if (issue.details) {
@@ -319,7 +319,7 @@ export class ReportGenerator {
    */
   private addIssueGroupToMarkdownReport(issues: CheckResult[], lines: string[]): void {
     for (const issue of issues) {
-      const fileDetail = issue.file ? ` (${issue.file}${issue.line ? `:${issue.line}` : ''})` : '';
+      const fileDetail = issue.file ? ` (${issue.file}${issue.location?.line ? `:${issue.location.line}` : ''})` : '';
       lines.push(`### ❌ ${issue.name}${fileDetail}`);
       lines.push('');
       
