@@ -44,4 +44,10 @@ yarn-error.log*
 tmp/
 temp/
 .tmp/
-.cache/ 
+.cache/
+
+# Generated reports
+vibecheck-report-*.html
+
+# Test fixtures
+test/fixtures/ 

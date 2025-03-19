@@ -5,6 +5,8 @@ export enum Severity {
   Low = 'low'
 }
 
+export type ReportFormat = 'text' | 'json' | 'markdown' | 'html';
+
 export interface CheckResult {
   id: string;
   name: string;
@@ -49,8 +51,8 @@ export interface SupabaseCheckOptions extends CheckOptions {
 }
 
 export interface ReportOptions {
+  format?: ReportFormat;
   outputFile?: string;
-  format?: 'text' | 'json' | 'markdown';
   showPassed?: boolean;
 }
 

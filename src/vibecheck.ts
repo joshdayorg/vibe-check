@@ -2,7 +2,7 @@ import * as path from 'path';
 import * as fs from 'fs-extra';
 import { CheckResult, VibeCheckOptions, Checker, ReportOptions, CheckOptions, Severity } from './types';
 import { checkers } from './checkers';
-import { ReportGenerator } from './reports/report-generator';
+import { generateReport } from './reports';
 import * as logger from './utils/logger';
 
 export class VibeCheck {
@@ -51,80 +51,26 @@ export class VibeCheck {
       }
       
       // Run all checkers
-      const allResults: CheckResult[] = [];
+      const results = await this.runCheckers();
       
-      for (const checker of this.availableCheckers) {
-        logger.info(`Running checker: ${checker.name}`);
-        
-        try {
-          const results = await checker.check({
-            directory: this.options.directory,
-            ignorePatterns: this.options.ignorePatterns,
-            verbose: this.options.verbose
-          });
-          
-          allResults.push(...results);
-          
-          if (this.options.verbose) {
-            logger.debug(`Checker ${checker.name} found ${results.length} results`);
-          }
-        } catch (err) {
-          logger.error(`Error running checker ${checker.name}: ${err}`);
-          
-          allResults.push({
-            id: `${checker.id}-error`,
-            name: `${checker.name} Error`,
-            description: `An error occurred during the ${checker.name}`,
-            severity: Severity.Medium,
-            passed: false,
-            details: `Error: ${err}`
-          });
-        }
-      }
+      // Generate report
+      const reportFile = await generateReport(
+        results,
+        this.options.format,
+        this.options.outputFile
+      );
       
-      // Log results summary
-      const passedResults = allResults.filter(result => result.passed);
-      const failedResults = allResults.filter(result => !result.passed);
-      
-      if (failedResults.length === 0) {
-        logger.success(`All ${passedResults.length} checks passed!`);
+      // Print console report
+      const failedResults = results.filter(result => !result.passed);
+      if (failedResults.length > 0) {
+        logger.warn(`Found ${failedResults.length} potential issues. See report for details: ${reportFile}`);
       } else {
-        logger.warn(`Found ${failedResults.length} issues (${passedResults.length} checks passed)`);
-        
-        // Group by severity
-        const criticalIssues = failedResults.filter(r => r.severity === 'critical');
-        const highIssues = failedResults.filter(r => r.severity === 'high');
-        const mediumIssues = failedResults.filter(r => r.severity === 'medium');
-        const lowIssues = failedResults.filter(r => r.severity === 'low');
-        
-        if (criticalIssues.length > 0) {
-          logger.error(`Found ${criticalIssues.length} critical issues!`);
-        }
-        if (highIssues.length > 0) {
-          logger.warn(`Found ${highIssues.length} high severity issues!`);
-        }
-        
-        // Print console report using ReportGenerator
-        const reportGenerator = new ReportGenerator(allResults);
-        reportGenerator.printConsoleReport(this.options.showPassed);
+        logger.success(`All checks passed! See report for details: ${reportFile}`);
       }
       
-      // Generate report file if requested
-      if (this.options.outputFile) {
-        const reportGenerator = new ReportGenerator(allResults);
-        const reportFile = await reportGenerator.generateReportFile({
-          format: this.options.format,
-          outputFile: this.options.outputFile,
-          showPassed: this.options.showPassed
-        });
-        
-        logger.info(`Report saved to ${reportFile}`);
-      }
-      
-      return allResults;
+      return results;
     } catch (err) {
-      logger.error(`Error running VibeCheck: ${err}`);
-      throw err;
+      return this.handleError(err as Error);
     }
   }
 

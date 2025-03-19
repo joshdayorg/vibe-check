@@ -5,7 +5,7 @@ import * as path from 'path';
 import * as fs from 'fs-extra';
 import { VibeCheck } from './vibecheck';
 import { LogLevel, setLogLevel } from './utils/logger';
-import { VibeCheckOptions } from './types';
+import { VibeCheckOptions, ReportFormat } from './types';
 
 // Create the CLI program
 const program = new Command();
@@ -25,6 +25,7 @@ program
   .option('-s, --skip <checkers...>', 'Checkers to skip')
   .option('-v, --verbose', 'Enable verbose output')
   .option('-o, --output <file>', 'Output file for the report')
+  .option('-f, --format <format>', 'Report format (text, json, markdown, html)', 'markdown')
   .option('--no-passed', 'Do not show passed checks in the report')
   .action(async (directory, options) => {
     try {
@@ -43,15 +44,15 @@ program
         skipCheckers: options.skip || [],
         verbose: options.verbose || false,
         outputFile: options.output,
-        showPassed: options.passed !== false
+        showPassed: options.passed !== false,
+        format: options.format as ReportFormat
       };
       
       // Run the VibeCheck scanner
       const scanner = new VibeCheck(vibeCheckOptions);
       await scanner.run();
-      
     } catch (err) {
-      console.error(`Error: ${err}`);
+      console.error('Error:', err);
       process.exit(1);
     }
   });
@@ -76,4 +77,4 @@ program
   });
 
 // Parse command line arguments
-program.parse(process.argv); 
+program.parse(); 

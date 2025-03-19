@@ -28,7 +28,7 @@
     "chalk": "^4.1.2",
     "commander": "^11.1.0",
     "dotenv-flow": "^3.3.0",
-    "fs-extra": "^11.3.0",
+    "fs-extra": "^11.2.0",
     "glob": "^7.2.3",
     "glob-gitignore": "^1.0.15"
   },
