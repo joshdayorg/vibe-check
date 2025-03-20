@@ -1,6 +1,23 @@
 # VibeCheck
 
-A security scanner for modern web applications that helps developers identify common security issues, especially in Next.js, Supabase, and AI-integrated applications.
+VibeCheck is a security scanner that helps identify potential security issues in your web applications.
+
+## Quick Start for Beginners
+
+VibeCheck makes it easy to find and fix security issues with AI assistance:
+
+1. **Run the scan** (no installation needed):
+   ```bash
+   npx @sparky123/vibecheck
+   ```
+
+2. **Open the HTML report** that was generated (the file path will be shown in the console output)
+
+3. **Click "Copy" on any issue** you want to fix
+
+4. **Paste the issue into ChatGPT or your preferred AI assistant** and ask for a fix
+
+That's it! The AI will help you understand and fix the security issues in your code.
 
 ## Features
 
@@ -16,11 +33,15 @@ VibeCheck currently checks for:
 
 ## Installation
 
-```bash
-# Install globally
-npm install -g @sparky123/vibecheck
+You can install VibeCheck globally:
 
-# Or run with npx
+```bash
+npm install -g @sparky123/vibecheck
+```
+
+Or run it directly with npx:
+
+```bash
 npx @sparky123/vibecheck
 ```
 
