@@ -58,4 +58,55 @@ export interface ReportOptions {
 
 export interface VibeCheckOptions extends CheckOptions, ReportOptions {
   fix?: boolean;
+  config?: ConfigFile;
+}
+
+// Configuration file structure
+export interface ConfigFile {
+  extends?: string; // Extend another config
+  ignorePatterns?: string[];
+  skipCheckers?: string[];
+  severityOverrides?: SeverityOverride[];
+  ignoreIssues?: string[]; // IDs of issues to ignore
+  reportOptions?: ReportOptions;
+  checkerOptions?: CheckerOptions;
+}
+
+// Override severity for specific checkers or issues
+export interface SeverityOverride {
+  id: string; // Checker ID or specific issue ID
+  severity: Severity;
+}
+
+// Options specific to checkers
+export interface CheckerOptions {
+  apiKey?: ApiKeyCheckerOptions;
+  nextJs?: NextJsCheckerOptions;
+  supabase?: SupabaseCheckerOptions;
+  // Add other checker-specific options as needed
+}
+
+// API Key Checker options
+export interface ApiKeyCheckerOptions {
+  additionalPatterns?: ApiKeyPattern[];
+  ignorePatterns?: string[];
+}
+
+export interface ApiKeyPattern {
+  service: string;
+  pattern: string;
+  recommendation: string;
+}
+
+// Next.js Checker options
+export interface NextJsCheckerOptions {
+  checkPublicEnv?: boolean;
+  additionalEnvFiles?: string[];
+}
+
+// Supabase Checker options
+export interface SupabaseCheckerOptions {
+  checkRls?: boolean;
+  checkStorage?: boolean;
+  additionalTables?: string[];
 } 

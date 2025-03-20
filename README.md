@@ -117,6 +117,98 @@ The `rate-limit-checker` identifies API routes missing rate limiting protection.
 
 Implement rate limiting with libraries like rate-limiter-flexible or @upstash/ratelimit.
 
+## Configuration
+
+VibeCheck can be configured using a configuration file. The following file formats are supported:
+
+- `vibecheck.config.js` (JavaScript)
+- `vibecheck.config.json` (JSON)
+- `.vibecheckrc` (JSON)
+- `.vibecheckrc.json` (JSON)
+- `.vibecheckrc.js` (JavaScript)
+
+You can generate a basic configuration file using:
+
+```bash
+npx vibecheck init
+```
+
+Or with specific configurations:
+
+```bash
+npx vibecheck init --type next
+```
+
+Available config types:
+- `basic` - Basic recommended settings
+- `strict` - More strict security settings
+- `next` - Settings optimized for Next.js projects
+- `supabase` - Settings optimized for Supabase projects
+
+### Configuration Options
+
+```json
+{
+  "extends": "vibecheck:recommended", // Extend a built-in config
+  "ignorePatterns": [ // Glob patterns to ignore
+    "**/node_modules/**", 
+    "**/dist/**", 
+    "**/build/**"
+  ],
+  "skipCheckers": [ // Checkers to skip
+    "api-key-checker"
+  ],
+  "severityOverrides": [ // Override severity for specific issues
+    { 
+      "id": "jwt-storage-checker", 
+      "severity": "critical" 
+    }
+  ],
+  "ignoreIssues": [ // IDs of specific issues to ignore
+    "specific-issue-id"
+  ],
+  "reportOptions": { // Options for reports
+    "format": "html",
+    "showPassed": false
+  },
+  "checkerOptions": { // Options for specific checkers
+    "nextJs": {
+      "checkPublicEnv": true
+    },
+    "supabase": {
+      "checkRls": true
+    },
+    "apiKey": {
+      "additionalPatterns": [
+        {
+          "service": "Custom API",
+          "pattern": "custom-[a-z0-9]{32}",
+          "recommendation": "Store custom API keys in environment variables"
+        }
+      ]
+    }
+  }
+}
+```
+
+### Built-in Configurations
+
+VibeCheck comes with several built-in configurations:
+
+- `vibecheck:recommended` - Default recommended settings
+- `vibecheck:strict` - More strict security settings
+- `vibecheck:next` - Settings optimized for Next.js projects
+- `vibecheck:supabase` - Settings optimized for Supabase projects
+
+You can extend these in your configuration:
+
+```json
+{
+  "extends": "vibecheck:recommended",
+  "ignorePatterns": ["**/my-specific-pattern/**"]
+}
+```
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.

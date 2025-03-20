@@ -8,6 +8,16 @@ export enum LogLevel {
   NONE,
 }
 
+// Error categories for better error handling
+export enum ErrorCategory {
+  FILE_ACCESS = 'FILE_ACCESS',
+  CONFIG = 'CONFIG',
+  CHECKER = 'CHECKER',
+  REPORT = 'REPORT',
+  NETWORK = 'NETWORK',
+  UNKNOWN = 'UNKNOWN'
+}
+
 let currentLogLevel = LogLevel.INFO;
 
 export function setLogLevel(level: LogLevel): void {
@@ -32,9 +42,14 @@ export function warn(message: string): void {
   }
 }
 
-export function error(message: string): void {
+export function error(message: string, category: ErrorCategory = ErrorCategory.UNKNOWN, err?: Error): void {
   if (currentLogLevel <= LogLevel.ERROR) {
-    console.log(chalk.red(`[ERROR] ${message}`));
+    console.log(chalk.red(`[ERROR][${category}] ${message}`));
+    
+    // Log stack trace in debug mode
+    if (currentLogLevel === LogLevel.DEBUG && err?.stack) {
+      console.log(chalk.red(err.stack));
+    }
   }
 }
 
@@ -55,5 +70,35 @@ export function header(message: string): void {
 export function separator(): void {
   if (currentLogLevel <= LogLevel.INFO) {
     console.log(chalk.gray('----------------------------------------'));
+  }
+}
+
+// Helper for safe error handling
+export function safeOperation<T>(
+  operation: () => T,
+  errorMessage: string,
+  category: ErrorCategory = ErrorCategory.UNKNOWN,
+  defaultValue?: T
+): T | undefined {
+  try {
+    return operation();
+  } catch (err) {
+    error(errorMessage, category, err as Error);
+    return defaultValue;
+  }
+}
+
+// Helper for safe async operations
+export async function safeAsync<T>(
+  operation: () => Promise<T>,
+  errorMessage: string,
+  category: ErrorCategory = ErrorCategory.UNKNOWN,
+  defaultValue?: T
+): Promise<T | undefined> {
+  try {
+    return await operation();
+  } catch (err) {
+    error(errorMessage, category, err as Error);
+    return defaultValue;
   }
 } 
