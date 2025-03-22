@@ -1,6 +1,6 @@
 # VibeCheck
 
-VibeCheck is a security scanner that helps identify potential security issues in your web applications **and** makes it easy to fix them with AI assistance.
+VibeCheck is a security scanner that helps identify potential security issues in your web applications **and** makes it easy to fix them with AI-powered coding tools.
 
 ## Quick Start for Beginners
 
@@ -13,9 +13,9 @@ VibeCheck offers a complete security workflow in just a few steps:
 
 2. **Open the HTML report** that was generated (the file path will be shown in the console output)
 
-3. **Click "Copy" on any issue** you want to fix - this formats all the relevant details for AI tools
+3. **Click "Copy" on any issue** you want to fix - this formats all the relevant details for AI-powered coding tools
 
-4. **Paste the issue into ChatGPT or your preferred AI assistant** and ask for a fix
+4. **Paste the issue into Cursor, Windsurf, or your preferred AI code editor** and ask for a fix
 
 That's it! This "scan → copy → paste → fix" workflow bridges the gap between security scanning and actual remediation, making security accessible to developers of all skill levels.
 
