@@ -19,7 +19,7 @@ describe('API Key Checker', () => {
       // This file has exposed API keys
       const supabaseKey = 'sbp_1234567890abcdef1234567890abcdef1234567890';
       const openaiKey = 'sk-1234567890abcdef1234567890abcdef1234567890';
-      const googleKey = 'AIzaSyC1b9fK8d7jLGh1TBArM73vg5FQMWin5Kw';
+      const googleKey = 'AIzaSyC1234567890abcdefghijklmnopqrstuvwxyz'; // Test key, not real
       const githubKey = 'ghp_abcdefghijklmnopqrstuvwxyz1234567890';
       const awsKey = 'AKIAIOSFODNN7EXAMPLE';
     `);
